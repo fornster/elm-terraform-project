@@ -1,3 +1,23 @@
+variable "bucket"{
+  default=""
+  description = "gcs bucket used to store terraform state"
+}
+
+variable "gckStatePrefix"{
+  default = ""
+  description = "prefix of terraform gck state is. needed if using remote state to get variables"
+}
+
+variable "thisStatePrefix"{
+  default = ""
+  description = "prefix for where to store this files terraform state"
+}
+
+variable "applicationName"{
+  default = ""
+  desciption = "name of the application being managed"
+}
+
 terraform {
   required_providers {
     google = {
@@ -11,8 +31,8 @@ terraform {
   }
 
   backend "gcs" {
-    bucket = "terraform-testing-jaf"
-    prefix = "elm-terraform"
+    bucket = var.bucket
+    prefix = var.thisStatePrefix
   }
 }
 
@@ -21,8 +41,8 @@ data "terraform_remote_state" "gke" {
   backend = "gcs"
 
   config = {
-    bucket = "terraform-testing-jaf"
-    prefix = "gck"
+    bucket = var.bucket
+    prefix = var.gckStatePrefix
   }
 }
 
@@ -52,7 +72,7 @@ resource "kubernetes_deployment" "elm" {
   metadata {
     name = "scalable-elm-example"
     labels = {
-      App = "ScalableElmExample"
+      App = var.applicationName
     }
   }
 
@@ -60,13 +80,13 @@ resource "kubernetes_deployment" "elm" {
     replicas = 2
     selector {
       match_labels = {
-        App = "ScalableElmExample"
+        App = var.applicationName
       }
     }
     template {
       metadata {
         labels = {
-          App = "ScalableElmExample"
+          App = var.applicationName
         }
       }
       spec {
