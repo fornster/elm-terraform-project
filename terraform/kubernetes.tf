@@ -15,7 +15,7 @@ variable "thisStatePrefix"{
 
 variable "applicationName"{
   default = ""
-  desciption = "name of the application being managed"
+  description = "name of the application being managed"
 }
 
 terraform {
