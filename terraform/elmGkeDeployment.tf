@@ -1,20 +1,20 @@
-variable "bucket"{
-  default=""
+variable "bucket" {
+  default     = ""
   description = "gcs bucket used to store terraform state"
 }
 
-variable "gckStatePrefix"{
-  default = ""
+variable "gckStatePrefix" {
+  default     = ""
   description = "prefix of terraform gck state is. needed if using remote state to get variables"
 }
 
-variable "thisStatePrefix"{
-  default = ""
+variable "thisStatePrefix" {
+  default     = ""
   description = "prefix for where to store this files terraform state"
 }
 
-variable "applicationName"{
-  default = ""
+variable "applicationName" {
+  default     = ""
   description = "name of the application being managed"
 }
 
@@ -29,14 +29,16 @@ terraform {
       version = ">= 2.0.1"
     }
   }
-
+  #tells terraform where to store the state file
+  #if commented out will default to local
   backend "gcs" {
     bucket = var.bucket
     prefix = var.thisStatePrefix
   }
 }
 
-
+#Use remote state from gke deployment to get things like project_id and cluster name.
+#not necessary but speeds things up and makes it more modular
 data "terraform_remote_state" "gke" {
   backend = "gcs"
 
@@ -48,8 +50,8 @@ data "terraform_remote_state" "gke" {
 
 # Retrieve GKE cluster information
 provider "google" {
-  project =  data.terraform_remote_state.gke.outputs.project_id
-  region  =  data.terraform_remote_state.gke.outputs.kubernetes_cluster_name
+  project = data.terraform_remote_state.gke.outputs.project_id
+  region  = data.terraform_remote_state.gke.outputs.kubernetes_cluster_name
 }
 
 data "google_client_config" "default" {}
@@ -58,7 +60,6 @@ data "google_container_cluster" "my_cluster" {
   name     = data.terraform_remote_state.gke.outputs.kubernetes_cluster_name
   location = data.terraform_remote_state.gke.outputs.region
 }
-
 
 
 provider "kubernetes" {
@@ -70,7 +71,7 @@ provider "kubernetes" {
 
 resource "kubernetes_deployment" "elm" {
   metadata {
-    name = "scalable-elm-example"
+    name   = "scalable-elm-example"
     labels = {
       App = var.applicationName
     }
